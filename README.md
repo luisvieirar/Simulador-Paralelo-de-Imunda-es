@@ -219,3 +219,283 @@ O simulador demonstrou que:
 3. A estratégia de decomposição por linhas mostrou-se eficaz e escalável.
 
 4. O tempo serial de 98.20 segundos serve como baseline de desempenho, demonstrando claramente o ganho da paralelização.
+
+---
+
+## ✅ Código
+
+"""
+SIMULADOR PARALELO DE RISCO DE INUNDAÇÕES
+TESTE COM DIFERENTES NÚMEROS DE PROCESSOS: 1, 2, 4, 8, 12
+GRADE: 10.000 x 10.000 = 100 MILHÕES de células
+"""
+
+import numpy as np
+import time
+from multiprocessing import Pool
+import matplotlib.pyplot as plt
+import gc
+import sys
+
+def calcular_risco(precipitacao, escoamento, umidade_solo):
+    """Calcula nível de risco para uma célula"""
+    if precipitacao > 400 and escoamento > 200:
+        return 3
+    elif precipitacao > 300 or escoamento > 150:
+        return 2
+    elif precipitacao > 200 or umidade_solo > 400:
+        return 1
+    else:
+        return 0
+
+def simular_sequencial(dados):
+    """Versão SEQUENCIAL (1 processo/thread) - TEMPO SERIAL"""
+    altura, largura = dados['precipitacao'].shape
+    resultado = np.zeros((altura, largura), dtype=np.int8)
+    
+    for i in range(altura):
+        for j in range(largura):
+            resultado[i, j] = calcular_risco(
+                dados['precipitacao'][i, j],
+                dados['escoamento'][i, j],
+                dados['umidade_solo'][i, j]
+            )
+        if (i + 1) % (altura // 10) == 0:
+            print(f"      Progresso: {(i+1)/altura*100:.0f}%")
+    
+    return resultado
+
+def processar_linha(args):
+    """Processa uma linha inteira da matriz (usado no paralelo)"""
+    linha_idx, precipitacao_linha, escoamento_linha, umidade_linha = args
+    largura = len(precipitacao_linha)
+    resultado_linha = np.zeros(largura, dtype=np.int8)
+    
+    for j in range(largura):
+        if precipitacao_linha[j] > 400 and escoamento_linha[j] > 200:
+            resultado_linha[j] = 3
+        elif precipitacao_linha[j] > 300 or escoamento_linha[j] > 150:
+            resultado_linha[j] = 2
+        elif precipitacao_linha[j] > 200 or umidade_linha[j] > 400:
+            resultado_linha[j] = 1
+        else:
+            resultado_linha[j] = 0
+    
+    return linha_idx, resultado_linha
+
+def simular_paralelo(dados, num_processos):
+    """Versão PARALELA com número específico de processos"""
+    altura, largura = dados['precipitacao'].shape
+    
+    # Prepara argumentos para cada linha
+    args_lista = []
+    for i in range(altura):
+        args_lista.append((
+            i,
+            dados['precipitacao'][i, :],
+            dados['escoamento'][i, :],
+            dados['umidade_solo'][i, :]
+        ))
+    
+    # Executa em paralelo
+    with Pool(processes=num_processos) as pool:
+        resultados = pool.map(processar_linha, args_lista)
+    
+    # Monta matriz final
+    resultado = np.zeros((altura, largura), dtype=np.int8)
+    for idx, linha_resultado in resultados:
+        resultado[idx, :] = linha_resultado
+    
+    return resultado
+
+# ============================================
+# PROGRAMA PRINCIPAL
+# ============================================
+
+if __name__ == "__main__":
+    print("=" * 70)
+    print("SIMULADOR PARALELO DE RISCO DE INUNDAÇÕES")
+    print("TESTE COM DIFERENTES NÚMEROS DE PROCESSOS")
+    print("Grade: 10.000 x 10.000 = 100 MILHÕES de células")
+    print("=" * 70)
+    
+    # Configurações
+    TAMANHO = 10000  # 10000x10000 = 100 MILHÕES
+    PROCESSOS_TESTE = [1, 2, 4, 8, 12]  # Núcleos/processos que o professor pediu
+    
+    # Calcular memória necessária
+    memoria_mb = (TAMANHO * TAMANHO * 3 * 4) / (1024 * 1024)
+    print(f"\n[INFORMAÇÃO]")
+    print(f"   Grade: {TAMANHO} x {TAMANHO} = {TAMANHO * TAMANHO:,} células")
+    print(f"   Memória estimada: ~{memoria_mb:.0f} MB (cerca de {memoria_mb/1024:.1f} GB)")
+    print(f"   Processos a testar: {PROCESSOS_TESTE}")
+    
+    if memoria_mb > 2048:
+        print(f"   ⚠️ ATENÇÃO: Este teste requer cerca de {memoria_mb/1024:.1f} GB de RAM!")
+        resposta = input(f"\n   Continuar? (s/N): ")
+        if resposta.lower() != 's':
+            print("   Operação cancelada.")
+            sys.exit(0)
+    
+    # ========== ETAPA 1: GERAR DADOS ==========
+    print(f"\n[ETAPA 1] Gerando dados sintéticos (100 milhões de células)...")
+    inicio_geracao = time.time()
+    
+    print(f"   Gerando precipitação...")
+    precipitacao = np.random.gamma(2, 50, (TAMANHO, TAMANHO)).astype(np.float32)
+    
+    print(f"   Gerando escoamento...")
+    escoamento = np.random.uniform(0, 300, (TAMANHO, TAMANHO)).astype(np.float32)
+    
+    print(f"   Gerando umidade do solo...")
+    umidade_solo = np.random.uniform(10, 600, (TAMANHO, TAMANHO)).astype(np.float32)
+    
+    dados = {
+        'precipitacao': precipitacao,
+        'escoamento': escoamento,
+        'umidade_solo': umidade_solo
+    }
+    
+    fim_geracao = time.time()
+    print(f"   ✓ Dados gerados em {fim_geracao - inicio_geracao:.2f} segundos")
+    
+    # ========== ETAPA 2: EXECUÇÃO SEQUENCIAL (1 processo) ==========
+    print(f"\n[ETAPA 2] Executando versão SEQUENCIAL (1 processo/thread)...")
+    print(f"   Processando {TAMANHO * TAMANHO:,} células...")
+    print(f"   ⏱️ Isso pode levar vários minutos...")
+    
+    inicio_seq = time.time()
+    resultado_seq = simular_sequencial(dados)
+    fim_seq = time.time()
+    TEMPO_1_PROCESSO = fim_seq - inicio_seq
+    
+    print(f"   ✓ TEMPO COM 1 PROCESSO: {TEMPO_1_PROCESSO:.2f} segundos ({TEMPO_1_PROCESSO/60:.2f} min)")
+    
+    # ========== ETAPA 3: TESTAR DIFERENTES PROCESSOS ==========
+    print(f"\n[ETAPA 3] Testando com diferentes números de processos...")
+    
+    resultados = []
+    resultados.append({'processos': 1, 'tempo': TEMPO_1_PROCESSO, 'speedup': 1.0})
+    
+    for num_proc in PROCESSOS_TESTE:
+        if num_proc == 1:
+            continue  # Já executamos
+        
+        print(f"\n   Testando com {num_proc} processos...")
+        inicio_par = time.time()
+        resultado_par = simular_paralelo(dados, num_proc)
+        fim_par = time.time()
+        tempo_par = fim_par - inicio_par
+        speedup = TEMPO_1_PROCESSO / tempo_par
+        
+        resultados.append({
+            'processos': num_proc,
+            'tempo': tempo_par,
+            'speedup': speedup
+        })
+        
+        print(f"      Tempo: {tempo_par:.2f} segundos")
+        print(f"      Speedup: {speedup:.2f}x")
+        
+        # Liberar memória do resultado anterior
+        del resultado_par
+        gc.collect()
+    
+    # ========== ETAPA 4: DISTRIBUIÇÃO DO RISCO ==========
+    print(f"\n[ETAPA 4] Distribuição do Risco de Inundação:")
+    print(f"   " + "-" * 50)
+    
+    unique, counts = np.unique(resultado_seq, return_counts=True)
+    niveis = {0: "🟢 BAIXO", 1: "🟡 MODERADO", 2: "🟠 ALTO", 3: "🔴 EXTREMO"}
+    
+    for nivel, count in zip(unique, counts):
+        percentual = count / (TAMANHO * TAMANHO) * 100
+        print(f"   {niveis[nivel]}: {count:>12,} células ({percentual:>6.2f}%)")
+    print(f"   " + "-" * 50)
+    
+    # ========== ETAPA 5: TABELA DE RESULTADOS ==========
+    print(f"\n[ETAPA 5] TABELA DE RESULTADOS - Speedup por número de processos:")
+    print(f"   " + "=" * 50)
+    print(f"   | {'Processos':<10} | {'Tempo (s)':<12} | {'Speedup':<10} |")
+    print(f"   " + "-" * 50)
+    
+    for r in resultados:
+        print(f"   | {r['processos']:<10} | {r['tempo']:<12.2f} | {r['speedup']:<10.2f}x |")
+    
+    print(f"   " + "=" * 50)
+    
+    # ========== ETAPA 6: GERAR GRÁFICOS ==========
+    print(f"\n[ETAPA 6] Gerando visualizações...")
+    
+    # Gráfico 1: Tempo x Processos
+    processos = [r['processos'] for r in resultados]
+    tempos = [r['tempo'] for r in resultados]
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(processos, tempos, 'bo-', linewidth=2, markersize=10)
+    plt.xlabel('Número de Processos/Threads', fontsize=12)
+    plt.ylabel('Tempo de Execução (segundos)', fontsize=12)
+    plt.title(f'Tempo de Execução vs Número de Processos\nGrade: 10.000x10.000 (100M células)', fontsize=14)
+    plt.grid(True, alpha=0.3)
+    plt.xticks(processos)
+    
+    for i, (proc, tempo) in enumerate(zip(processos, tempos)):
+        plt.annotate(f'{tempo:.1f}s', (proc, tempo), textcoords="offset points", xytext=(0,10), ha='center')
+    
+    plt.tight_layout()
+    plt.savefig('tempo_vs_processos.png', dpi=150)
+    print(f"   ✓ Gráfico salvo: tempo_vs_processos.png")
+    
+    # Gráfico 2: Speedup x Processos
+    speedups = [r['speedup'] for r in resultados]
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(processos, speedups, 'go-', linewidth=2, markersize=10, label='Speedup Obtido')
+    plt.plot(processos, processos, 'r--', linewidth=2, label='Speedup Ideal (linear)')
+    plt.xlabel('Número de Processos/Threads', fontsize=12)
+    plt.ylabel('Speedup', fontsize=12)
+    plt.title(f'Speedup vs Número de Processos\nGrade: 10.000x10.000 (100M células)', fontsize=14)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xticks(processos)
+    
+    for i, (proc, sp) in enumerate(zip(processos, speedups)):
+        plt.annotate(f'{sp:.2f}x', (proc, sp), textcoords="offset points", xytext=(0,10), ha='center')
+    
+    plt.tight_layout()
+    plt.savefig('speedup_vs_processos.png', dpi=150)
+    print(f"   ✓ Gráfico salvo: speedup_vs_processos.png")
+    
+    # Gráfico 3: Mapa de Risco (amostragem)
+    fator_amostragem = 100
+    amostra = resultado_seq[::fator_amostragem, ::fator_amostragem]
+    
+    plt.figure(figsize=(12, 10))
+    im = plt.imshow(amostra, cmap='YlOrRd', interpolation='nearest', vmin=0, vmax=3)
+    plt.colorbar(im, ticks=[0, 1, 2, 3], label='Nível de Risco')
+    plt.title(f'Mapa de Risco de Inundação - 10.000x10.000\nSpeedup Máximo: {max(speedups):.2f}x com {processos[speedups.index(max(speedups))]} processos', fontsize=14)
+    plt.xlabel('Longitude (pixels)', fontsize=12)
+    plt.ylabel('Latitude (pixels)', fontsize=12)
+    plt.tight_layout()
+    plt.savefig('mapa_risco.png', dpi=150)
+    print(f"   ✓ Mapa salvo: mapa_risco.png")
+    
+    # ========== RESULTADO FINAL ==========
+    print(f"\n" + "=" * 70)
+    print(f"✅ SIMULAÇÃO CONCLUÍDA COM SUCESSO!")
+    print(f"=" * 70)
+    print(f"\n📊 RESUMO DOS RESULTADOS - GRADE 10.000x10.000:")
+    print(f"   • Total de células: {TAMANHO * TAMANHO:,} (100 milhões)")
+    print(f"   • Tempo com 1 processo (serial): {TEMPO_1_PROCESSO:.2f} s ({TEMPO_1_PROCESSO/60:.1f} min)")
+    
+    melhor = max(resultados, key=lambda x: x['speedup'])
+    print(f"   • Melhor Speedup: {melhor['speedup']:.2f}x com {melhor['processos']} processos")
+    
+    print(f"\n📁 Arquivos gerados:")
+    print(f"   • tempo_vs_processos.png")
+    print(f"   • speedup_vs_processos.png")
+    print(f"   • mapa_risco.png")
+    print(f"\n" + "=" * 70)
+    
+    # Liberar memória
+    gc.collect()
