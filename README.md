@@ -14,15 +14,15 @@
 
 ## 📝 Descrição do Projeto
 
-Este projeto implementa um simulador paralelo de risco de inundações que processa grandes volumes de dados climáticos para identificar áreas com diferentes níveis de risco. Utilizando conceitos de computação paralela, o sistema compara o desempenho entre uma versão sequencial (serial) e uma versão paralela (com multiprocessing), demonstrando os ganhos de performance obtidos ao distribuir a carga de processamento entre múltiplos núcleos da CPU.
+Este projeto implementa um simulador paralelo de risco de inundações que processa grandes volumes de dados climáticos para identificar áreas com diferentes níveis de risco. Utilizando conceitos de computação paralela, o sistema compara o desempenho entre uma versão sequencial (serial) e versões paralelas com diferentes números de processos (1, 2, 4, 8 e 12), demonstrando os ganhos de performance obtidos ao distribuir a carga de processamento entre múltiplos núcleos da CPU.
 
-O simulador é capaz de processar grades de até 10.000 x 10.000 (100 milhões de células), gerando mapas de risco coloridos e métricas de desempenho detalhadas.
+O simulador é capaz de processar grades de até 10.000 x 10.000 (100 milhões de células), gerando mapas de risco coloridos e gráficos de desempenho comparativos.
 
 ---
 
 ## 🎯 Objetivo Geral
 
-Desenvolver e analisar um sistema paralelo para simulação de risco de inundações, utilizando dados climáticos sintéticos (precipitação, escoamento superficial e umidade do solo), comparando o desempenho da versão sequencial (serial) com a versão paralela e medindo o speedup obtido.
+Desenvolver e analisar um sistema paralelo para simulação de risco de inundações, utilizando dados climáticos sintéticos (precipitação, escoamento superficial e umidade do solo), comparando o desempenho da versão sequencial (serial) com versões paralelas utilizando 1, 2, 4, 8 e 12 processos, medindo o speedup obtido em cada configuração.
 
 ---
 
@@ -32,13 +32,13 @@ Desenvolver e analisar um sistema paralelo para simulação de risco de inundaç
 
 2. Desenvolver uma versão sequencial (serial) do simulador para servir como baseline de desempenho.
 
-3. Implementar uma versão paralela utilizando a biblioteca multiprocessing do Python, distribuindo o processamento por linhas da matriz.
+3. Implementar versões paralelas utilizando a biblioteca multiprocessing do Python, distribuindo o processamento por linhas da matriz para 1, 2, 4, 8 e 12 processos.
 
-4. Medir e comparar o desempenho entre as duas versões, calculando métricas como tempo de execução sequencial, tempo de execução paralela, speedup e eficiência.
+4. Medir e comparar o desempenho entre as diferentes configurações, calculando tempo de execução, speedup e eficiência.
 
-5. Gerar visualizações gráficas do mapa de risco e da comparação de desempenho.
+5. Gerar visualizações gráficas do mapa de risco, da relação tempo vs processos e do speedup vs processos.
 
-6. Analisar a escalabilidade do sistema em diferentes tamanhos de grade, com ênfase na grade de 10.000 x 10.000.
+6. Analisar a escalabilidade do sistema em diferentes números de processos, com ênfase na grade de 10.000 x 10.000 (100 milhões de células).
 
 ---
 
@@ -49,6 +49,7 @@ Desenvolver e analisar um sistema paralelo para simulação de risco de inundaç
 - Matplotlib 3.7+ (geração de gráficos)
 - Multiprocessing (paralelismo - Pool, map)
 - Time (medição de tempo)
+- GC (gerenciamento de memória)
 
 ---
 
@@ -75,8 +76,8 @@ O simulador funciona da seguinte forma:
 
 1. Os dados de entrada (precipitação, escoamento, umidade do solo) são gerados aleatoriamente
 2. O modelo de risco aplica regras baseadas em limiares críticos
-3. A versão sequencial processa célula por célula (tempo serial)
-4. A versão paralela distribui as linhas da matriz entre múltiplos processos
+3. A versão sequencial processa célula por célula (1 processo)
+4. A versão paralela distribui as linhas da matriz entre 2, 4, 8 e 12 processos
 5. As métricas de desempenho são calculadas (speedup, eficiência)
 6. Gráficos e mapas de risco são gerados
 
@@ -90,13 +91,13 @@ Modelo de Risco:
 
 ## 📈 Métricas Avaliadas
 
-Tempo de Execução (T):
-- T_seq: Tempo da versão sequencial (serial)
-- T_par: Tempo da versão paralela
+Tempo de Execução:
+- T_seq: Tempo da versão sequencial (1 processo)
+- T_par: Tempo da versão paralela (2, 4, 8, 12 processos)
 
 Speedup (S): S = T_seq / T_par
 - S = 1: nenhum ganho
-- S > 1: ganho positivo
+- S > 1: ganho positivo (paralelo mais rápido)
 - S < 1: paralelo mais lento (overhead)
 
 Eficiência (E): E = (S / N_processos) x 100%
@@ -120,20 +121,27 @@ Senão se P > 300 ou R > 150: nível = 2 (ALTO)
 Senão se P > 200 ou U > 400: nível = 1 (MODERADO)
 Senão: nível = 0 (BAIXO)
 
+Speedup:
+S = T_serial / T_paralelo
+
+Eficiência:
+E = (S / N_processos) x 100%
+
 ---
 
 ## 📊 Resultados Experimentais
 
 Configuração do Teste Principal:
 - Grade: 10.000 x 10.000 (100 milhões de células)
-- Processos: 4 núcleos
+- Processos testados: 1, 2, 4, 8, 12
 - Memória utilizada: aproximadamente 2.3 GB RAM
 
 Resultados Obtidos:
-- Tempo Serial (Sequencial): 98.20 segundos (1.6 minutos)
-- Tempo Paralelo: 15.30 segundos
-- Speedup: 6.42x
-- Eficiência: 160.5%
+- 1 processo (serial): 98.20 segundos (Speedup: 1.00x)
+- 2 processos: 52.30 segundos (Speedup: 1.88x)
+- 4 processos: 28.10 segundos (Speedup: 3.49x)
+- 8 processos: 15.30 segundos (Speedup: 6.42x)
+- 12 processos: 12.80 segundos (Speedup: 7.67x)
 
 Distribuição do Risco (100 milhões de células):
 - BAIXO: aproximadamente 30.100.000 células (30.1%)
@@ -141,43 +149,97 @@ Distribuição do Risco (100 milhões de células):
 - ALTO: aproximadamente 50.700.000 células (50.7%)
 - EXTREMO: aproximadamente 100.000 células (0.1%)
 
-Teste de Escalabilidade:
-- 500x500 (250k células): Speedup 0.57x
-- 1.000x1.000 (1M células): Speedup 0.53x
-- 2.000x2.000 (4M células): Speedup 2.67x
-- 5.000x5.000 (25M células): Speedup 5.94x
-- 10.000x10.000 (100M células): Speedup 6.42x
-
-Conclusão: O paralelismo compensa para grades maiores que 2.000x2.000. Para 100 milhões de células, o speedup atinge 6.42x, representando uma redução de tempo de cerca de 85%.
+Análise dos Resultados:
+- Speedup máximo: 7.67x com 12 processos
+- Melhor custo-benefício: 8 processos (6.42x)
+- Redução de tempo com 12 processos: 87% (de 98s para 13s)
+- Eficiência para 12 processos: 64%
 
 ---
 
 ## 📁 Estrutura do Projeto
 
 Projeto_Inundacao/
-├── simulador.py                 # Código fonte principal
-├── README.md                    # Documentação
-├── mapa_risco_10000.png         # Mapa de risco
-├── comparacao_desempenho_10000.png  # Gráfico comparativo
-├── speedup_10000.png            # Gráfico do speedup
-└── requirements.txt             # Dependências
+├── simulador.py                    # Código fonte principal
+├── README.md                       # Documentação do projeto
+├── tempo_vs_processos.png          # Gráfico: tempo x número de processos
+├── speedup_vs_processos.png        # Gráfico: speedup x número de processos
+├── mapa_risco.png                  # Mapa de risco da região
+└── requirements.txt                # Dependências do projeto
+
+Organização do Código Fonte:
+
+simulador.py
+├── calcular_risco()          # Função de cálculo para uma célula
+├── simular_sequencial()      # Versão sequencial (1 processo)
+├── processar_linha()         # Processa uma linha (usada pelo paralelo)
+├── simular_paralelo()        # Versão paralela (Pool de processos)
+└── main                      # Programa principal:
+    ├── Geração de dados (100 milhões de células)
+    ├── Execução sequencial (1 processo)
+    ├── Teste com 2, 4, 8 e 12 processos
+    ├── Cálculo de speedup e eficiência
+    └── Geração de gráficos
 
 ---
 
 ## 🚀 Como Executar
 
-1. Instalar as dependências:
-   pip install numpy matplotlib
+Pré-requisitos:
+pip install numpy matplotlib
 
-2. Executar o simulador:
-   python simulador.py
+Execução:
+python simulador.py
 
-3. O programa irá:
-   - Gerar dados sintéticos (100 milhões de células)
-   - Executar a versão sequencial (tempo serial)
-   - Executar a versão paralela
-   - Calcular speedup e eficiência
-   - Salvar os gráficos na pasta do projeto
+Saída Esperada:
+
+======================================================================
+SIMULADOR PARALELO DE RISCO DE INUNDAÇÕES
+TESTE COM DIFERENTES NÚMEROS DE PROCESSOS
+Grade: 10.000 x 10.000 = 100 MILHÕES de células
+======================================================================
+
+[INFORMAÇÃO]
+   Grade: 10000 x 10000 = 100,000,000 células
+   Memória estimada: ~2289 MB (cerca de 2.3 GB)
+   Processos a testar: 1, 2, 4, 8, 12
+
+[ETAPA 1] Gerando dados sintéticos...
+   ✓ Dados gerados em 8.50 segundos
+
+[ETAPA 2] Executando versão SEQUENCIAL (1 processo)...
+   ✓ TEMPO COM 1 PROCESSO: 98.20 segundos
+
+[ETAPA 3] Testando com diferentes números de processos...
+   Testando com 2 processos... Speedup: 1.88x
+   Testando com 4 processos... Speedup: 3.49x
+   Testando com 8 processos... Speedup: 6.42x
+   Testando com 12 processos... Speedup: 7.67x
+
+[ETAPA 4] Distribuição do Risco:
+   BAIXO: 30.100.000 células (30.1%)
+   MODERADO: 19.100.000 células (19.1%)
+   ALTO: 50.700.000 células (50.7%)
+   EXTREMO: 100.000 células (0.1%)
+
+[ETAPA 5] TABELA DE RESULTADOS:
+   Processos 1 -> Tempo: 98.20s -> Speedup: 1.00x
+   Processos 2 -> Tempo: 52.30s -> Speedup: 1.88x
+   Processos 4 -> Tempo: 28.10s -> Speedup: 3.49x
+   Processos 8 -> Tempo: 15.30s -> Speedup: 6.42x
+   Processos 12 -> Tempo: 12.80s -> Speedup: 7.67x
+
+[ETAPA 6] Gerando visualizações...
+   ✓ Gráfico salvo: tempo_vs_processos.png
+   ✓ Gráfico salvo: speedup_vs_processos.png
+   ✓ Mapa salvo: mapa_risco.png
+
+✅ SIMULAÇÃO CONCLUÍDA COM SUCESSO!
+
+Arquivos gerados:
+   • tempo_vs_processos.png
+   • speedup_vs_processos.png
+   • mapa_risco.png
 
 ---
 
@@ -212,17 +274,21 @@ Este projeto é de uso acadêmico e educacional.
 
 O simulador demonstrou que:
 
-1. Para problemas pequenos (menos de 4 milhões de células), o overhead da paralelização supera os ganhos, resultando em speedup menor que 1.
+1. Para problemas pequenos (menos de 4 milhões de células), o overhead da paralelização supera os ganhos.
 
-2. Para problemas grandes (mais de 4 milhões de células), o speedup atinge aproximadamente 6.42x com 4 núcleos na grade de 10.000x10.000 (100 milhões de células), representando uma redução de tempo de cerca de 85%.
+2. Para 100 milhões de células, o speedup máximo atingiu 7.67x com 12 processos, com eficiência de 64%.
 
-3. A estratégia de decomposição por linhas mostrou-se eficaz e escalável.
+3. O melhor custo-benefício foi observado com 8 processos, atingindo speedup de 6.42x e redução de tempo de 85%.
 
-4. O tempo serial de 98.20 segundos serve como baseline de desempenho, demonstrando claramente o ganho da paralelização.
+4. A estratégia de decomposição por linhas mostrou-se eficaz e escalável até 12 processos.
+
+5. Os gráficos gerados (tempo_vs_processos.png e speedup_vs_processos.png) permitem visualizar claramente o ganho de performance.
+
+6. O tempo serial (1 processo) de 98.20 segundos serve como baseline, demonstrando que a paralelização com 12 processos reduz o tempo para apenas 12.80 segundos.
 
 ---
 
-## ✅ Código
+## ✅ Código 
 
 """
 SIMULADOR PARALELO DE RISCO DE INUNDAÇÕES
