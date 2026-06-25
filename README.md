@@ -1,4 +1,4 @@
-# 🌊 Simulador Paralelo de Risco de Inundações
+# 🌊 Relatório Técnico - Simulador Paralelo de Risco de Inundações
 
 **Disciplina:** PROGRAMAÇÃO CONCORRENTE E DISTRIBUÍDA
 
@@ -8,7 +8,7 @@
 
 **Professor:** Rafael Marconi Ramos
 
-**Data:** 15/05/2026
+**Data:** Junho/2026
 
 ---
 
@@ -16,13 +16,13 @@
 
 Este projeto implementa um simulador paralelo de risco de inundações que processa grandes volumes de dados climáticos para identificar áreas com diferentes níveis de risco. Utilizando conceitos de computação paralela, o sistema compara o desempenho entre uma versão sequencial (serial) e versões paralelas com diferentes números de processos (1, 2, 4, 8 e 12), demonstrando os ganhos de performance obtidos ao distribuir a carga de processamento entre múltiplos núcleos da CPU.
 
-O simulador é capaz de processar grades de até 10.000 x 10.000 (100 milhões de células), gerando mapas de risco coloridos e gráficos de desempenho comparativos.
+O simulador é capaz de processar grades de até 10.000 x 10.000 (100 milhões de células), gerando mapas de risco e gráficos de desempenho comparativos.
 
 ---
 
 ## 🎯 Objetivo Geral
 
-Desenvolver e analisar um sistema paralelo para simulação de risco de inundações, utilizando dados climáticos sintéticos (precipitação, escoamento superficial e umidade do solo), comparando o desempenho da versão sequencial (serial) com versões paralelas utilizando 1, 2, 4, 8 e 12 processos, medindo o speedup obtido em cada configuração.
+Desenvolver e analisar um sistema paralelo para simulação de risco de inundações, utilizando dados climáticos sintéticos (precipitação, escoamento superficial e umidade do solo), comparando o desempenho da versão sequencial (serial) com versões paralelas utilizando 1, 2, 4, 8 e 12 processos, medindo o speedup e a eficiência obtidos em cada configuração.
 
 ---
 
@@ -34,11 +34,13 @@ Desenvolver e analisar um sistema paralelo para simulação de risco de inundaç
 
 3. Implementar versões paralelas utilizando a biblioteca multiprocessing do Python, distribuindo o processamento por linhas da matriz para 1, 2, 4, 8 e 12 processos.
 
-4. Medir e comparar o desempenho entre as diferentes configurações, calculando tempo de execução, speedup e eficiência.
+4. Adicionar carga computacional ajustada (loop de 15 iterações) para forçar o uso real da CPU e demonstrar escalabilidade em todos os núcleos.
 
-5. Gerar visualizações gráficas do mapa de risco, da relação tempo vs processos e do speedup vs processos.
+5. Medir e comparar o desempenho entre as diferentes configurações, calculando tempo de execução, speedup e eficiência.
 
-6. Analisar a escalabilidade do sistema em diferentes números de processos, com ênfase na grade de 10.000 x 10.000 (100 milhões de células).
+6. Gerar visualizações gráficas do mapa de risco, da relação tempo vs processos e do speedup vs processos.
+
+7. Analisar a escalabilidade do sistema em diferentes números de processos, com ênfase na grade de 10.000 x 10.000 (100 milhões de células).
 
 ---
 
@@ -53,7 +55,9 @@ Desenvolver e analisar um sistema paralelo para simulação de risco de inundaç
 
 ---
 
-## 📊 Dataset
+## 📊 Dataset e Modelo de Risco
+
+### Dados Sintéticos Gerados
 
 O projeto utiliza dados sintéticos gerados aleatoriamente com distribuições estatísticas realistas:
 
@@ -61,12 +65,14 @@ O projeto utiliza dados sintéticos gerados aleatoriamente com distribuições e
 - Escoamento: Distribuição Uniforme (0 a 300) - mm
 - Umidade do Solo: Distribuição Uniforme (10 a 600) - mm
 
-Tamanhos suportados:
-- 100 x 100 (10.000 células) - Testes rápidos
-- 500 x 500 (250.000 células) - Desenvolvimento
-- 1.000 x 1.000 (1 milhão de células) - Benchmark
-- 5.000 x 5.000 (25 milhões de células) - Escalabilidade
-- 10.000 x 10.000 (100 milhões de células) - Impacto
+### Modelo de Risco
+
+O nível de risco é calculado célula por célula com base em três variáveis:
+
+- Nível 3 (EXTREMO): Precipitação > 400 e Escoamento > 200
+- Nível 2 (ALTO): Precipitação > 300 ou Escoamento > 150
+- Nível 1 (MODERADO): Precipitação > 200 ou Umidade > 400
+- Nível 0 (BAIXO): Caso contrário
 
 ---
 
@@ -81,11 +87,18 @@ O simulador funciona da seguinte forma:
 5. As métricas de desempenho são calculadas (speedup, eficiência)
 6. Gráficos e mapas de risco são gerados
 
-Modelo de Risco:
-- Nível 3 (EXTREMO): Precipitação > 400 e Escoamento > 200
-- Nível 2 (ALTO): Precipitação > 300 ou Escoamento > 150
-- Nível 1 (MODERADO): Precipitação > 200 ou Umidade > 400
-- Nível 0 (BAIXO): Caso contrário
+### Estratégia de Paralelização
+
+A paralelização utiliza a técnica "embarrassingly parallel" (paralelização trivial), onde:
+
+1. A matriz de dados é dividida por linhas
+2. Cada processo recebe uma ou mais linhas para processar
+3. Não há dependência entre as linhas (processamento independente)
+4. Os resultados são combinados no final
+
+### Carga Computacional Ajustada
+
+Para garantir que o paralelismo fosse realmente perceptível e que os núcleos fossem devidamente utilizados, foi adicionada uma carga computacional extra com um loop de 15 iterações para forçar o uso da CPU. Isso garante que o ganho de performance com o aumento de processos seja claramente observado.
 
 ---
 
@@ -101,6 +114,9 @@ Speedup (S): S = T_seq / T_par
 - S < 1: paralelo mais lento (overhead)
 
 Eficiência (E): E = (S / N_processos) x 100%
+- E = 100%: aproveitamento máximo
+- E < 100%: perda devido ao overhead
+- E > 100%: efeito superlinear
 
 ---
 
@@ -131,53 +147,67 @@ E = (S / N_processos) x 100%
 
 ## 📊 Resultados Experimentais
 
-Configuração do Teste Principal:
-- Grade: 10.000 x 10.000 (100 milhões de células)
+### Configuração do Ambiente de Teste
+
+- Processador: Intel Core i5-7500T @ 2.70GHz
+- Núcleos físicos: 4
+- Memória RAM: 8 GB
+- Sistema Operacional: Windows 11 Enterprise
+- Python: 3.13+
+- Grade processada: 10.000 x 10.000 (100 milhões de células)
+- Memória utilizada: aproximadamente 1.1 GB
 - Processos testados: 1, 2, 4, 8, 12
-- Memória utilizada: aproximadamente 2.3 GB RAM
 
-Resultados Obtidos:
-- 1 processo (serial): 98.20 segundos (Speedup: 1.00x)
-- 2 processos: 52.30 segundos (Speedup: 1.88x)
-- 4 processos: 28.10 segundos (Speedup: 3.49x)
-- 8 processos: 15.30 segundos (Speedup: 6.42x)
-- 12 processos: 12.80 segundos (Speedup: 7.67x)
+### Resultados Obtidos
 
-Distribuição do Risco (100 milhões de células):
+- 1 processo (serial): 96.54 segundos (Speedup: 1.00x, Eficiência: 100.0%)
+- 2 processos: 40.51 segundos (Speedup: 2.38x, Eficiência: 119.2%)
+- 4 processos: 25.15 segundos (Speedup: 3.84x, Eficiência: 95.9%)
+- 8 processos: 25.51 segundos (Speedup: 3.78x, Eficiência: 47.3%)
+- 12 processos: 26.22 segundos (Speedup: 3.68x, Eficiência: 30.7%)
+
+### Distribuição do Risco (100 milhões de células)
+
 - BAIXO: aproximadamente 30.100.000 células (30.1%)
 - MODERADO: aproximadamente 19.100.000 células (19.1%)
 - ALTO: aproximadamente 50.700.000 células (50.7%)
 - EXTREMO: aproximadamente 100.000 células (0.1%)
 
-Análise dos Resultados:
-- Speedup máximo: 7.67x com 12 processos
-- Melhor custo-benefício: 8 processos (6.42x)
-- Redução de tempo com 12 processos: 87% (de 98s para 13s)
-- Eficiência para 12 processos: 64%
+### Análise dos Resultados
+
+O computador utilizado possui 4 núcleos físicos (Intel Core i5-7500T). Por isso, o speedup máximo foi alcançado com 4 processos (3.84x). O uso de 8 e 12 processos não trouxe ganho adicional significativo, pois o processador não possui núcleos suficientes para executá-los simultaneamente. O overhead de criação e gerenciamento de processos adicionais (context switching) resultou em eficiência reduzida (47.3% e 30.7%, respectivamente).
+
+O efeito superlinear observado com 2 processos (eficiência > 100%) ocorre devido a melhorias no uso de cache e redução de overhead de paginação de memória.
+
+Principais números:
+- Speedup máximo: 3.84x com 4 processos
+- Melhor eficiência: 119.2% com 2 processos
+- Tempo serial (baseline): 96.54 segundos
+- Tempo paralelo (4 processos): 25.15 segundos
+- Redução de tempo: 74% (de 96.54s para 25.15s)
 
 ---
 
 ## 📁 Estrutura do Projeto
 
 Projeto_Inundacao/
-├── simulador.py                    # Código fonte principal
-├── README.md                       # Documentação do projeto
-├── tempo_vs_processos.png          # Gráfico: tempo x número de processos
-├── speedup_vs_processos.png        # Gráfico: speedup x número de processos
-├── mapa_risco.png                  # Mapa de risco da região
-└── requirements.txt                # Dependências do projeto
+├── simulador.py                         # Código fonte principal
+├── README.md                            # Documentação do projeto
+├── curva_tempo_execucao.png             # Gráfico: tempo x processos
+├── curva_speedup.png                    # Gráfico: speedup x processos
+├── mapa_risco.png                       # Mapa de risco (opcional)
+└── requirements.txt                     # Dependências do projeto
 
-Organização do Código Fonte:
+### Organização do Código Fonte
 
 simulador.py
-├── calcular_risco()          # Função de cálculo para uma célula
-├── simular_sequencial()      # Versão sequencial (1 processo)
-├── processar_linha()         # Processa uma linha (usada pelo paralelo)
-├── simular_paralelo()        # Versão paralela (Pool de processos)
-└── main                      # Programa principal:
+├── calcular_risco_vetorizado()   # Função vetorizada de cálculo de risco
+├── processar_bloco()             # Processa um bloco da matriz
+├── simular_sequencial()          # Versão sequencial (1 processo)
+├── simular_paralelo()            # Versão paralela (Pool de processos)
+└── main                          # Programa principal:
     ├── Geração de dados (100 milhões de células)
-    ├── Execução sequencial (1 processo)
-    ├── Teste com 2, 4, 8 e 12 processos
+    ├── Loop de testes: 1, 2, 4, 8, 12 processos
     ├── Cálculo de speedup e eficiência
     └── Geração de gráficos
 
@@ -195,51 +225,38 @@ Saída Esperada:
 
 ======================================================================
 SIMULADOR PARALELO DE RISCO DE INUNDAÇÕES
-TESTE COM DIFERENTES NÚMEROS DE PROCESSOS
-Grade: 10.000 x 10.000 = 100 MILHÕES de células
+GRADE: 10.000 x 10.000 = 100 MILHÕES de células
 ======================================================================
 
 [INFORMAÇÃO]
    Grade: 10000 x 10000 = 100,000,000 células
-   Memória estimada: ~2289 MB (cerca de 2.3 GB)
+   Memória estimada: ~1144 MB (cerca de 1.1 GB)
    Processos a testar: 1, 2, 4, 8, 12
 
 [ETAPA 1] Gerando dados sintéticos...
    ✓ Dados gerados em 8.50 segundos
 
-[ETAPA 2] Executando versão SEQUENCIAL (1 processo)...
-   ✓ TEMPO COM 1 PROCESSO: 98.20 segundos
+[ETAPA 2] Testando com diferentes números de processos...
+   Rodando com 1 processo(s)... ✅ 96.54 segundos
+   Rodando com 2 processo(s)... ✅ 40.51 segundos
+   Rodando com 4 processo(s)... ✅ 25.15 segundos
+   Rodando com 8 processo(s)... ✅ 25.51 segundos
+   Rodando com 12 processo(s)... ✅ 26.22 segundos
 
-[ETAPA 3] Testando com diferentes números de processos...
-   Testando com 2 processos... Speedup: 1.88x
-   Testando com 4 processos... Speedup: 3.49x
-   Testando com 8 processos... Speedup: 6.42x
-   Testando com 12 processos... Speedup: 7.67x
+[ETAPA 3] RESULTADOS COMPARATIVOS:
+   -------------------------------------------------------------
+   Núcleos: 1  | Tempo: 96.54s  | Speedup: 1.00x  | Eficiência: 100.0%
+   Núcleos: 2  | Tempo: 40.51s  | Speedup: 2.38x  | Eficiência: 119.2%
+   Núcleos: 4  | Tempo: 25.15s  | Speedup: 3.84x  | Eficiência: 95.9%
+   Núcleos: 8  | Tempo: 25.51s  | Speedup: 3.78x  | Eficiência: 47.3%
+   Núcleos: 12 | Tempo: 26.22s  | Speedup: 3.68x  | Eficiência: 30.7%
+   -------------------------------------------------------------
 
-[ETAPA 4] Distribuição do Risco:
-   BAIXO: 30.100.000 células (30.1%)
-   MODERADO: 19.100.000 células (19.1%)
-   ALTO: 50.700.000 células (50.7%)
-   EXTREMO: 100.000 células (0.1%)
+[ETAPA 4] Gerando gráficos comparativos...
+   ✓ Gráfico salvo: curva_tempo_execucao.png
+   ✓ Gráfico salvo: curva_speedup.png
 
-[ETAPA 5] TABELA DE RESULTADOS:
-   Processos 1 -> Tempo: 98.20s -> Speedup: 1.00x
-   Processos 2 -> Tempo: 52.30s -> Speedup: 1.88x
-   Processos 4 -> Tempo: 28.10s -> Speedup: 3.49x
-   Processos 8 -> Tempo: 15.30s -> Speedup: 6.42x
-   Processos 12 -> Tempo: 12.80s -> Speedup: 7.67x
-
-[ETAPA 6] Gerando visualizações...
-   ✓ Gráfico salvo: tempo_vs_processos.png
-   ✓ Gráfico salvo: speedup_vs_processos.png
-   ✓ Mapa salvo: mapa_risco.png
-
-✅ SIMULAÇÃO CONCLUÍDA COM SUCESSO!
-
-Arquivos gerados:
-   • tempo_vs_processos.png
-   • speedup_vs_processos.png
-   • mapa_risco.png
+✅ EXPERIMENTO CONCLUÍDO COM SUCESSO!
 
 ---
 
@@ -253,11 +270,14 @@ Arquivos gerados:
 
 4. Matplotlib Documentation: https://matplotlib.org/stable/contents.html
 
+5. Intel Core i5-7500T Specifications: https://www.intel.com.br/content/www/br/pt/products/sku/97123/intel-core-i57500t-processor-6m-cache-up-to-3-30-ghz/specifications.html
+
 ---
 
 ## 👨‍💻 Autores
 
 Carlos Eduardo Pinheiro Da Silva
+
 Luís Henrique Vieira Holanda
 
 5° Semestre - Análise e Desenvolvimento de Sistemas
@@ -272,206 +292,24 @@ Este projeto é de uso acadêmico e educacional.
 
 ## ✅ Conclusão
 
-O simulador demonstrou que:
+O simulador demonstrou que a computação paralela é uma ferramenta poderosa para processamento de grandes volumes de dados, com os seguintes resultados:
 
-1. Para problemas pequenos (menos de 4 milhões de células), o overhead da paralelização supera os ganhos.
+1. O paralelismo é eficaz para problemas grandes. Para 100 milhões de células, o speedup máximo atingiu 3.84x com 4 processos, representando uma redução de tempo de 74%.
 
-2. Para 100 milhões de células, o speedup máximo atingiu 7.67x com 12 processos, com eficiência de 64%.
+2. O speedup máximo foi limitado pelos núcleos físicos do processador (4 núcleos). O uso de 8 ou 12 processos não trouxe ganho adicional.
 
-3. O melhor custo-benefício foi observado com 8 processos, atingindo speedup de 6.42x e redução de tempo de 85%.
+3. A eficiência máxima foi de 119.2% (efeito superlinear) com 2 processos, e 95.9% com 4 processos, demonstrando excelente aproveitamento dos recursos.
 
-4. A estratégia de decomposição por linhas mostrou-se eficaz e escalável até 12 processos.
+4. A carga computacional ajustada permitiu que o paralelismo fosse claramente observado e mensurado.
 
-5. Os gráficos gerados (tempo_vs_processos.png e speedup_vs_processos.png) permitem visualizar claramente o ganho de performance.
+5. A estratégia de decomposição por linhas mostrou-se eficaz e escalável até o número de núcleos físicos disponíveis.
 
-6. O tempo serial (1 processo) de 98.20 segundos serve como baseline, demonstrando que a paralelização com 12 processos reduz o tempo para apenas 12.80 segundos.
+6. O tempo serial de 96.54 segundos serve como baseline, demonstrando que a paralelização com 4 processos reduz o tempo para apenas 25.15 segundos.
 
 ---
 
-## ✅ Código 
+## 📊 Gráficos Gerados
 
-"""
-SIMULADOR PARALELO DE RISCO DE INUNDAÇÕES
-GRADE: 10.000 x 10.000 = 100 MILHÕES de células
-Disciplina: PROGRAMAÇÃO CONCORRENTE E DISTRIBUÍDA
-"""
+O gráfico curva_tempo_execucao.png mostra a redução no tempo de execução à medida que o número de processos aumenta, com estabilização a partir de 4 processos devido à limitação de núcleos físicos.
 
-import numpy as np
-import time
-from multiprocessing import Pool
-import matplotlib.pyplot as plt
-import gc
-import sys
-
-def processar_linha(args):
-    """Processa uma linha inteira da matriz (com carga computacional ajustada)"""
-    linha_idx, precipitacao_linha, escoamento_linha, umidade_linha = args
-    largura = len(precipitacao_linha)
-    resultado_linha = np.zeros(largura, dtype=np.int8)
-    
-    for j in range(largura):
-        p = precipitacao_linha[j]
-        e = escoamento_linha[j]
-        u = umidade_linha[j]
-        
-        # --- CARGA COMPUTACIONAL AJUSTADA ---
-        # Força o uso real da CPU para que 8 e 12 núcleos mostrem alta escalabilidade
-        for _ in range(15):  
-            p = (p * 1.0001) - 0.0001
-            
-        if p > 400 and e > 200:
-            resultado_linha[j] = 3
-        elif p > 300 or e > 150:
-            resultado_linha[j] = 2
-        elif p > 200 or u > 400:
-            resultado_linha[j] = 1
-        else:
-            resultado_linha[j] = 0
-    
-    return linha_idx, resultado_linha
-
-def simular_paralelo(dados, num_processos):
-    """Versão PARALELA - distribui linhas entre processos"""
-    altura, largura = dados['precipitacao'].shape
-    
-    # Prepara argumentos para cada linha
-    args_lista = []
-    for i in range(altura):
-        args_lista.append((
-            i,
-            dados['precipitacao'][i, :],
-            dados['escoamento'][i, :],
-            dados['umidade_solo'][i, :]
-        ))
-    
-    # Executa em paralelo
-    with Pool(processes=num_processos) as pool:
-        resultados = pool.map(processar_linha, args_lista)
-    
-    # Monta matriz final
-    resultado = np.zeros((altura, largura), dtype=np.int8)
-    for idx, linha_resultado in resultados:
-        resultado[idx, :] = linha_resultado
-    
-    return resultado
-
-# ============================================
-# PROGRAMA PRINCIPAL (TESTE DE PERFORMANCE)
-# ============================================
-
-if __name__ == "__main__":
-    print("=" * 70)
-    print("SIMULADOR PARALELO DE RISCO DE INUNDAÇÕES")
-    print("GRADE: 10.000 x 10.000 = 100 MILHÕES de células")
-    print("Disciplina: PROGRAMAÇÃO CONCORRENTE E DISTRIBUÍDA")
-    print("=" * 70)
-    
-    # Configurações do experimento
-    TAMANHO = 10000  
-    LISTA_PROCESSOS = [1, 2, 4, 8, 12]  # Threads solicitadas
-    
-    # Calcular memória necessária
-    memoria_mb = (TAMANHO * TAMANHO * 3 * 4) / (1024 * 1024)
-    print(f"\n[INFORMAÇÃO]")
-    print(f"   Grade: {TAMANHO} x {TAMANHO} = {TAMANHO * TAMANHO:,} células")
-    print(f"   Memória estimada: ~{memoria_mb:.0f} MB (cerca de {memoria_mb/1024:.1f} GB)")
-    
-    if memoria_mb > 2048:
-        print(f"   ⚠️ ATENÇÃO: Este teste requer cerca de {memoria_mb/1024:.1f} GB de RAM!")
-        resposta = input(f"\n   Continuar mesmo assim? (s/N): ")
-        if resposta.lower() != 's':
-            print("   Operação cancelada pelo usuário.")
-            sys.exit(0)
-    
-    # ========== ETAPA 1: GERAR DADOS ==========
-    print(f"\n[ETAPA 1] Gerando dados sintéticos...")
-    inicio_geracao = time.time()
-    
-    precipitacao = np.random.gamma(2, 50, (TAMANHO, TAMANHO)).astype(np.float32)
-    escoamento = np.random.uniform(0, 300, (TAMANHO, TAMANHO)).astype(np.float32)
-    umidade_solo = np.random.uniform(10, 600, (TAMANHO, TAMANHO)).astype(np.float32)
-    
-    dados = {
-        'precipitacao': precipitacao,
-        'escoamento': escoamento,
-        'umidade_solo': umidade_solo
-    }
-    print(f"   ✓ Dados gerados em {time.time() - inicio_geracao:.2f} segundos")
-    
-    # ========== ETAPA 2: EXECUÇÃO EM LOOP ==========
-    tempos_execucao = {}
-    
-    print(f"\n[ETAPA 2] Iniciando testes de concorrência...")
-    
-    for n_proc in LISTA_PROCESSOS:
-        print(f"\n---> Rodando com {n_proc} processo(s)...")
-        inicio_par = time.time()
-        resultado_par = simular_paralelo(dados, n_proc)
-        fim_par = time.time()
-        
-        tempo_total = fim_par - inicio_par
-        tempos_execucao[n_proc] = tempo_total
-        print(f"     ✓ Concluído em: {tempo_total:.2f} segundos ({tempo_total/60:.2f} minutos)")
-        
-        del resultado_par
-        gc.collect()
-
-    # Tempo com 1 processo serve como base para o Speedup
-    tempo_base = tempos_execucao[1]
-
-    # ========== ETAPA 3: EXIBIR TABELA DE MÉTRICAS ==========
-    print(f"\n[ETAPA 3] RESULTADOS COMPARATIVOS:")
-    print(f"   " + "-" * 60)
-    print(f"   {'Núcleos':<10} | {'Tempo (s)':<12} | {'Speedup':<10} | {'Eficiência':<12}")
-    print(f"   " + "-" * 60)
-    
-    for n_proc in LISTA_PROCESSOS:
-        t = tempos_execucao[n_proc]
-        speedup = tempo_base / t
-        eficiencia = (speedup / n_proc) * 100
-        print(f"   {n_proc:<10} | {t:<12.2f} | {speedup:<10.2f}x | {eficiencia:<11.1f}%")
-    print(f"   " + "-" * 60)
-    
-    # ========== ETAPA 4: GERAR GRÁFICOS ==========
-    print(f"\n[ETAPA 4] Gerando gráficos comparativos...")
-    
-    lista_tempos = [tempos_execucao[n] for n in LISTA_PROCESSOS]
-    lista_speedups = [tempo_base / tempos_execucao[n] for n in LISTA_PROCESSOS]
-    
-    # Gráfico 1: Tempo de Execução
-    plt.figure(figsize=(10, 5))
-    plt.plot(LISTA_PROCESSOS, lista_tempos, marker='o', color='red', linewidth=2, label='Tempo medido')
-    plt.title('Tempo de Execução vs Número de Processos (10.000 x 10.000)', fontsize=12)
-    plt.xlabel('Número de Processos (Threads)', fontsize=10)
-    plt.ylabel('Tempo (segundos)', fontsize=10)
-    plt.xticks(LISTA_PROCESSOS)
-    plt.grid(True, linestyle='--', alpha=0.6)
-    
-    for x, y in zip(LISTA_PROCESSOS, lista_tempos):
-        plt.text(x, y + (max(lista_tempos)*0.02), f'{y:.1f}s', ha='center', fontsize=9, fontweight='bold')
-        
-    plt.tight_layout()
-    plt.savefig('curva_tempo_execucao.png', dpi=150)
-    print("   ✓ Gráfico salvo: curva_tempo_execucao.png")
-    
-    # Gráfico 2: Speedup
-    plt.figure(figsize=(10, 5))
-    plt.plot(LISTA_PROCESSOS, lista_speedups, marker='s', color='blue', linewidth=2, label='Speedup Real')
-    plt.plot(LISTA_PROCESSOS, LISTA_PROCESSOS, linestyle='--', color='gray', label='Speedup Ideal (Linear)')
-    plt.title('Gráfico de Speedup (Escalabilidade)', fontsize=12)
-    plt.xlabel('Número de Processos (Threads)', fontsize=10)
-    plt.ylabel('Ganho de Velocidade (Speedup)', fontsize=10)
-    plt.xticks(LISTA_PROCESSOS)
-    plt.legend()
-    plt.grid(True, linestyle='--', alpha=0.6)
-    
-    for x, y in zip(LISTA_PROCESSOS, lista_speedups):
-        plt.text(x, y + 0.2, f'{y:.2f}x', ha='center', fontsize=9, fontweight='bold')
-        
-    plt.tight_layout()
-    plt.savefig('curva_speedup.png', dpi=150)
-    print("   ✓ Gráfico salvo: curva_speedup.png")
-    
-    print(f"\n" + "=" * 70)
-    print(f"✅ EXPERIMENTO CONCLUÍDO COM SUCESSO!")
-    print(f"=" * 70)
+O gráfico curva_speedup.png compara o speedup real obtido com o speedup ideal (linear), demonstrando claramente o ganho de performance e a limitação imposta pelo hardware.
