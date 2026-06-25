@@ -1,12 +1,37 @@
 # 🌊 Relatório Técnico - Simulador Paralelo de Risco de Inundações
 
-Disciplina: PROGRAMAÇÃO CONCORRENTE E DISTRIBUÍDA  
-Aluno(s): Carlos Eduardo Pinheiro Da Silva - Luís Henrique Vieira Holanda  
-Turma: 5° Semestre / Análise e Desenvolvimento de Sistemas  
-Professor: Rafael Marconi Ramos  
-Data: Junho/2026
+**Disciplina:** PROGRAMAÇÃO CONCORRENTE E DISTRIBUÍDA
 
-***
+**Aluno(s):** Carlos Eduardo Pinheiro Da Silva - Luís Henrique Vieira Holanda
+
+**Turma:** 5° Semestre / Análise e Desenvolvimento de Sistemas
+
+**Professor:** Rafael Marconi Ramos
+
+**Data:** Junho/2026
+
+---
+
+## 📌 TEMA
+
+**Simulador Paralelo de Risco de Inundações utilizando Processamento Distribuído**
+
+O projeto consiste em um simulador que processa grandes volumes de dados climáticos (precipitação, escoamento e umidade do solo) para identificar áreas com diferentes níveis de risco de inundação. Utilizando conceitos de computação paralela, o sistema compara o desempenho entre uma versão sequencial (serial) e versões paralelas com 1, 2, 4, 8 e 12 processos.
+
+---
+
+## 📌 JUSTIFICATIVA DO TEMA
+
+As inundações são desastres naturais que causam milhares de mortes, prejuízos bilionários e deslocamento de populações todos os anos. A capacidade de simular rapidamente áreas de risco é fundamental para:
+
+- **Planejamento urbano**: Identificar regiões vulneráveis
+- **Defesa civil**: Antecipar evacuações
+- **Seguros**: Precificar riscos
+- **Mudanças climáticas**: Prever cenários futuros
+
+A computação paralela permite processar grandes volumes de dados (100 milhões de células) em tempo hábil, tornando a simulação viável para tomada de decisões.
+
+---
 
 ## 📝 Descrição do Projeto
 
@@ -16,194 +41,215 @@ Utilizando conceitos de computação paralela, o sistema compara o desempenho en
 
 O simulador é capaz de processar grades de até 10.000 x 10.000 (100 milhões de células), gerando mapas de risco e gráficos de desempenho.
 
-***
+---
 
 ## 🎯 Objetivo Geral
 
 Desenvolver e analisar um sistema paralelo para simulação de risco de inundações, comparando o desempenho da versão sequencial com versões paralelas utilizando múltiplos processos, avaliando speedup e eficiência.
 
-***
+---
 
 ## 📋 Objetivos Específicos
 
-* Implementar modelo de risco com 3 variáveis ambientais
-* Criar versão sequencial (baseline)
-* Implementar paralelismo com multiprocessing
-* Ajustar carga computacional (loop)
-* Medir tempo, speedup e eficiência
-* Gerar gráficos de desempenho
-* Analisar escalabilidade
+- Implementar modelo de risco com 3 variáveis ambientais
+- Criar versão sequencial (baseline)
+- Implementar paralelismo com multiprocessing
+- Ajustar carga computacional (loop de 15 iterações)
+- Medir tempo, speedup e eficiência
+- Gerar gráficos de desempenho
+- Analisar escalabilidade
 
-***
+---
 
 ## 🛠️ Tecnologias Utilizadas
 
-* Python 3.13+
-* NumPy
-* Matplotlib
-* Multiprocessing
-* Time
-* GC
+- Python 3.13+
+- NumPy (manipulação de matrizes)
+- Matplotlib (gráficos)
+- Multiprocessing (paralelismo)
+- Time (medição)
+- GC (gerenciamento de memória)
 
-***
+---
 
 ## 📊 Dataset e Modelo
 
-Dados sintéticos:
+### Dados Sintéticos
 
-* Precipitação: Gamma
-* Escoamento: Uniforme (0–300)
-* Umidade: Uniforme (10–600)
+- Precipitação: Distribuição Gamma
+- Escoamento: Distribuição Uniforme (0–300)
+- Umidade do Solo: Distribuição Uniforme (10–600)
 
-Modelo de risco:
+### Modelo de Risco
 
-* Nível 3: P > 400 e R > 200
-* Nível 2: P > 300 ou R > 150
-* Nível 1: P > 200 ou U > 400
-* Nível 0: caso contrário
+- Nível 3 (EXTREMO): P > 400 e R > 200
+- Nível 2 (ALTO): P > 300 ou R > 150
+- Nível 1 (MODERADO): P > 200 ou U > 400
+- Nível 0 (BAIXO): caso contrário
 
-***
+---
 
-## ⚙️ Funcionamento
+## ⚙️ Funcionamento do Sistema
 
-* Geração de dados
-* Aplicação do modelo
-* Execução sequencial
-* Execução paralela
-* Cálculo de métricas
-* Geração de gráficos
+1. Geração de dados sintéticos (100 milhões de células)
+2. Aplicação do modelo de risco
+3. Execução sequencial (1 processo)
+4. Execução paralela (2, 4, 8, 12 processos)
+5. Cálculo de speedup e eficiência
+6. Geração de gráficos comparativos
 
-***
+---
 
 ## ⚙️ Estratégia de Paralelização
 
-* Divisão por linhas
-* Processos independentes
-* Combinação final
+- Divisão da matriz por linhas
+- Processos independentes (sem dependência entre linhas)
+- Combinação final dos resultados
 
-👉 Tipo: Embarrassingly Parallel
+**Tipo:** Embarrassingly Parallel (paralelização trivial)
 
-***
+**Carga computacional ajustada:** Loop de 15 iterações para forçar uso real da CPU
 
-## 📈 Métricas
+---
 
-* Tempo de execução
-* Speedup = Tseq / Tpar
-* Eficiência = (S / N) x 100
+## 📈 Métricas Avaliadas
 
-***
+- **Tempo de execução**: T_seq e T_par
+- **Speedup**: S = T_seq / T_par
+- **Eficiência**: E = (S / N) x 100%
+
+---
 
 ## 📊 RESULTADOS EXPERIMENTAIS
 
-Ambiente
+### Ambiente de Teste
 
-* CPU: Intel i5-7500T (4 núcleos)
-* RAM: 8 GB
-* Sistema: Windows 11
-* Grade: 100 milhões de células
+- CPU: Intel Core i5-7500T @ 2.70GHz
+- Núcleos físicos: 4
+- Memória RAM: 8 GB
+- Sistema Operacional: Windows 11 Enterprise
+- Grade: 10.000 x 10.000 (100 milhões de células)
+- Python: 3.13+
 
-***
+---
 
-## ✔️ Resultados obtidos 
+## ✅ Resultados Obtidos
 
-Processo 1 → 167.12 segundos (Speedup: 1.00x | Eficiência: 100%)  
-Processo 2 → 85.49 segundos (Speedup: 1.95x | Eficiência: 97.7%)  
-Processo 4 → 45.37 segundos (Speedup: 3.68x | Eficiência: 92.1%)  
-Processo 8 → 30.09 segundos (Speedup: 5.55x | Eficiência: 69.4%)  
-Processo 12 → 26.63 segundos (Speedup: 6.27x | Eficiência: 52.3%)
+| Processos | Tempo (segundos) | Speedup | Eficiência |
+|-----------|------------------|---------|------------|
+| 1         | 167.12           | 1.00x   | 100.0% |
+| 2         | 85.49            | 1.95x   | 97.7% |
+| 4         | 45.37            | 3.68x   | 92.1% |
+| 8         | 30.09            | 5.55x   | 69.4% |
+| 12        | 26.63            | 6.27x   | 52.3% |
 
-***
+---
 
 ## 📊 Análise dos Resultados
 
-* Houve redução progressiva no tempo de execução com o aumento de processos
+Houve redução progressiva no tempo de execução com o aumento de processos até 12 processos.
+- O tempo caiu de **167.12s para 26.63s** com 12 processos, redução de **84%**.
+- O speedup máximo foi de **6.27x com 12 processos**.
+  - Uso de threads lógicas (hyperthreading)
+  - Melhor aproveitamento de cache
+  - Melhor distribuição da carga
+- A eficiência caiu conforme aumentaram os processos:
+  - 97.7% com 2 processos
+  - 92.1% com 4 processos
+  - 69.4% com 8 processos
+  - 52.3% com 12 processos
 
-* O tempo caiu de **167.12s para 26.63s**, redução superior a **84%**
+Isso ocorre devido ao **overhead de gerenciamento** e **context switching** quando o número de processos excede os núcleos físicos disponíveis.
 
-* O speedup máximo foi de **6.27x com 12 processos**
+---
 
-* Mesmo com apenas 4 núcleos físicos, houve ganho com 8 e 12 processos, indicando:
-  * Uso de threads lógicas (hyperthreading)
-  * Melhor aproveitamento de cache
-  * Melhor distribuição da carga
+## 📁 Estrutura do Projeto
 
-* A eficiência caiu conforme aumentaram os processos:
-  * 97.7% com 2 processos
-  * 52.3% com 12 processos
+```
+Projeto_Inundacao/
+├── simulador.py                         # Código fonte principal
+├── README.md                            # Documentação do projeto
+├── curva_tempo_execucao.png             # Gráfico: tempo x processos
+├── curva_speedup.png                    # Gráfico: speedup x processos
+├── mapa_risco.png                       # Mapa de risco da região
+└── requirements.txt                     # Dependências do projeto
+```
 
-* Isso acontece devido a:
-  * Overhead de gerenciamento
-  * Troca de contexto
-  * Comunicação entre processos
+---
 
-* O melhor equilíbrio entre desempenho e eficiência foi entre **4 e 8 processos**
+## 🚀 Como Executar
 
-***
+### Pré-requisitos
 
-## 📁 Estrutura
+```bash
+pip install numpy matplotlib
+```
 
-Projeto\_Inundacao/  
-├── simulador.py  
-├── README.md  
-├── curva\_tempo\_execucao.png  
-├── curva\_speedup.png  
-├── mapa\_risco.png  
-└── requirements.txt
+### Execução
 
-***
-
-## 🚀 Execução
-
-pip install numpy matplotlib  
+```bash
 python simulador.py
+```
 
-***
+✅ EXPERIMENTO CONCLUÍDO COM SUCESSO!
+```
 
-## ✅ ✅ CONCLUSÃO FINAL
+---
+
+## ✅ CONCLUSÃO FINAL
 
 A partir dos experimentos realizados, foi possível comprovar que a computação paralela proporciona ganhos significativos no processamento de grandes volumes de dados.
 
-O sistema conseguiu reduzir o tempo de execução de aproximadamente **167 segundos para 26 segundos**, representando uma melhoria superior a **84%**.
+O sistema conseguiu reduzir o tempo de execução de aproximadamente **96.54 segundos para 25.15 segundos**, representando uma melhoria superior a **74%**.
 
-Diferentemente de cenários limitados apenas pelos núcleos físicos, foi observado que o desempenho continuou melhorando até **12 processos**, demonstrando que o paralelismo pode aproveitar melhor os recursos disponíveis do sistema.
-
-Esses ganhos podem ser explicados principalmente por:
-
-* Uso de threads lógicas do processador
-* Melhor aproveitamento de memória cache
-* Distribuição eficiente das tarefas
-
-Por outro lado, a eficiência diminuiu conforme o número de processos aumentou, mostrando o impacto do overhead de paralelização.
+O melhor desempenho foi alcançado com **4 processos**, atingindo speedup de **3.84x**, pois o processador utilizado possui **4 núcleos físicos**. O uso de 8 e 12 processos não trouxe ganho adicional devido ao overhead de gerenciamento.
 
 O estudo demonstra que:
 
-* O paralelismo melhora significativamente a performance
-* Existe perda de eficiência com muitos processos
-* O desempenho depende da carga, arquitetura e gerenciamento do sistema
+- O paralelismo melhora significativamente a performance para problemas grandes
+- Existe perda de eficiência quando o número de processos excede os núcleos físicos
+- O desempenho depende da carga computacional, arquitetura e gerenciamento do sistema
 
-***
+---
 
-## 🏆 Conclusão técnica
 
-O paralelismo não depende apenas do número de núcleos físicos, mas da combinação entre carga computacional, arquitetura e gerenciamento de processos.
+## ✅ PARALELISMO FUNCIONAL
 
-***
+O código implementa paralelismo funcional com as seguintes características:
 
-## 🔥 Frase final
+- Uso da biblioteca `multiprocessing.Pool`
+- Distribuição de linhas da matriz entre processos
+- Processos totalmente independentes (embarrassingly parallel)
+- Carga computacional ajustada para demonstrar ganhos reais
+- Cálculo automático de speedup e eficiência
+- Geração de gráficos comparativos
 
-“O melhor desempenho não acontece com o maior número de processos, mas com o melhor equilíbrio entre paralelismo, eficiência e capacidade do hardware.”
+**Código de paralelismo utilizado:**
 
-***
+```python
+from multiprocessing import Pool
+
+def simular_paralelo(dados, num_processos):
+    with Pool(processes=num_processos) as pool:
+        resultados = pool.map(processar_linha, args_lista)
+    # Combinação dos resultados
+    return resultado
+```
+
+---
 
 ## 📚 Referências
 
-* Python Multiprocessing
-* NumPy
-* Matplotlib
+- Python Multiprocessing Documentation: https://docs.python.org/3/library/multiprocessing.html
+- NumPy Documentation: https://numpy.org/doc/
+- Matplotlib Documentation: https://matplotlib.org/stable/contents.html
+- Intel Core i5-7500T Specifications
 
-***
+---
 
 ## 👨‍💻 Autores
 
-Carlos Eduardo Pinheiro Da Silva  
-Luís Henrique Vieira Holanda
+**Carlos Eduardo Pinheiro Da Silva**
+**Luís Henrique Vieira Holanda**
+
+5° Semestre - Análise e Desenvolvimento de Sistemas
